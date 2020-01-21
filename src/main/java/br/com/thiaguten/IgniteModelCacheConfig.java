@@ -45,8 +45,9 @@ public class IgniteModelCacheConfig {
 
     System.out.println("> Ignite cache names: " + ignite.cacheNames());
 
-    // 1 - SQL API:
-    // ------------
+    // 1 - SQL API usage to interact with the cache
+    // --------------------------------------------
+
     SqlFieldsQuery insertCity = new SqlFieldsQuery(
         "INSERT INTO City (_key, id, name) VALUES (?, ?, ?)");
     cityCache.query(insertCity.setArgs(1L, 1L, "Forest Hill")).getAll();
@@ -60,8 +61,9 @@ public class IgniteModelCacheConfig {
     personCache.query(insertPerson.setArgs(3L, "Mary Major", 1L)).getAll();
     personCache.query(insertPerson.setArgs(4L, "Richard Miles", 2L)).getAll();
 
-    // 2 - Key-Value API:
-    // --------------------------
+    // 2 - Key-Value API usage to interact with the cache
+    // --------------------------------------------------
+
     City city = new City(4L, "Brasília");
     cityCache.put(city.getId(), city);
 
@@ -72,8 +74,9 @@ public class IgniteModelCacheConfig {
     System.out.println("> [City] total size: " + cityCache.size(CachePeekMode.PRIMARY));
     System.out.println("> [Person] total size: " + personCache.size());
 
-    // Querying caches:
+    // Querying caches
     // ---------------
+
     sqlDistributedJoinQueryCache(personCache);
 
     sqlQueryingCityCache(cityCache);

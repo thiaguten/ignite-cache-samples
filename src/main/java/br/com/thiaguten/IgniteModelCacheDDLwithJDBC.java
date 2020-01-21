@@ -1,10 +1,8 @@
 package br.com.thiaguten;
 
 import static br.com.thiaguten.Environment.CITY_CACHE_NAME;
-import static br.com.thiaguten.Environment.CREATE_PERSON_NAME_INDEX_DLL;
-import static br.com.thiaguten.Environment.CREATE_PERSON_TABLE_DDL;
 import static br.com.thiaguten.Environment.PERSON_CACHE_NAME;
-import static br.com.thiaguten.Environment.SCHEMA;
+import static br.com.thiaguten.Environment.createJdbcTablesAndIndexes;
 import static br.com.thiaguten.Environment.keyValueQueryingCityCache;
 import static br.com.thiaguten.Environment.keyValueQueryingPersonCache;
 import static br.com.thiaguten.Environment.sqlDistributedJoinQueryCache;
@@ -19,35 +17,19 @@ import java.util.HashSet;
 import java.util.Set;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
-import org.apache.ignite.cache.CacheMode;
 import org.apache.ignite.cache.CachePeekMode;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
-import org.apache.ignite.configuration.CacheConfiguration;
 
-public class IgniteModelCacheDDL {
+public class IgniteModelCacheDDLwithJDBC {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     Ignite ignite = Environment.newIgnite();
 
-    // Create dummy cache to act as an entry point for SQL queries (new SQL API which do not require this
-    // will appear in future versions, JDBC and ODBC drivers do not require it already).
-//    CacheConfiguration<?, ?> cacheCfg = new CacheConfiguration<>(DUMMY_CACHE_NAME).setSqlSchema("PUBLIC");
-//    IgniteCache<?, ?> dummyCache = ignite.getOrCreateCache(cacheCfg);
+    // Create tables and indexes with JDBC Statement
+    createJdbcTablesAndIndexes();
 
-    CacheConfiguration<Long, City> cityCacheConfig = new CacheConfiguration<>();
-    cityCacheConfig.setName(CITY_CACHE_NAME);
-    cityCacheConfig.setSqlSchema(SCHEMA);
-    cityCacheConfig.setCacheMode(CacheMode.REPLICATED);
-    cityCacheConfig.setIndexedTypes(Long.class, City.class);
-
-    IgniteCache<Long, City> cityCache = ignite.getOrCreateCache(cityCacheConfig);
-
-    // Creating a new cache (Person) from another cache previously created (City), using the Ignite SQL API.
-    // https://apacheignite-sql.readme.io/docs/schema-and-indexes
-    cityCache.query(new SqlFieldsQuery(CREATE_PERSON_TABLE_DDL).setSchema(SCHEMA)).getAll();
-
+    IgniteCache<Long, City> cityCache = ignite.cache(CITY_CACHE_NAME);
     IgniteCache<PersonPK, Person> personCache = ignite.cache(PERSON_CACHE_NAME);
-    personCache.query(new SqlFieldsQuery(CREATE_PERSON_NAME_INDEX_DLL).setSchema(SCHEMA)).getAll();
 
     System.out.println("> Ignite cache names: " + ignite.cacheNames());
 
@@ -80,7 +62,7 @@ public class IgniteModelCacheDDL {
     System.out.println("> [City] total size: " + cityCache.size(CachePeekMode.PRIMARY));
     System.out.println("> [Person] total size: " + personCache.size());
 
-    // Querying caches
+    // Querying caches:
     // ---------------
 
     sqlDistributedJoinQueryCache(personCache);

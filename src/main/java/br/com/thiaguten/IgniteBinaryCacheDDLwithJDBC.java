@@ -5,7 +5,7 @@ import static br.com.thiaguten.Environment.CITY_VALUE_TYPE;
 import static br.com.thiaguten.Environment.PERSON_CACHE_NAME;
 import static br.com.thiaguten.Environment.PERSON_KEY_TYPE;
 import static br.com.thiaguten.Environment.PERSON_VALUE_TYPE;
-import static br.com.thiaguten.Environment.SCHEMA;
+import static br.com.thiaguten.Environment.createJdbcTablesAndIndexes;
 import static br.com.thiaguten.Environment.keyValueQueryingCityCacheBinary;
 import static br.com.thiaguten.Environment.keyValueQueryingPersonCacheBinary;
 import static br.com.thiaguten.Environment.sqlDistributedJoinQueryCache;
@@ -22,38 +22,24 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteBinary;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.binary.BinaryObject;
-import org.apache.ignite.cache.CacheMode;
 import org.apache.ignite.cache.CachePeekMode;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
-import org.apache.ignite.configuration.CacheConfiguration;
 
-public class IgniteBinaryCacheConfig {
+public class IgniteBinaryCacheDDLwithJDBC {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     Ignite ignite = Environment.newIgnite();
     IgniteBinary binary = ignite.binary();
 
-    CacheConfiguration<Long, City> cityCacheConfig = new CacheConfiguration<>();
-    cityCacheConfig.setName(CITY_CACHE_NAME);
-    cityCacheConfig.setSqlSchema(SCHEMA);
-    cityCacheConfig.setCacheMode(CacheMode.REPLICATED);
-    cityCacheConfig.setIndexedTypes(Long.class, City.class);
+    createJdbcTablesAndIndexes();
 
-    CacheConfiguration<PersonPK, Person> personCacheConfig = new CacheConfiguration<>();
-    personCacheConfig.setName(PERSON_CACHE_NAME);
-    personCacheConfig.setSqlSchema(SCHEMA);
-    personCacheConfig.setBackups(1);
-    personCacheConfig.setCacheMode(CacheMode.PARTITIONED);
-    personCacheConfig.setIndexedTypes(PersonPK.class, Person.class);
-
-    IgniteCache<Long, BinaryObject> cityCache = ignite.getOrCreateCache(cityCacheConfig).withKeepBinary();
-    IgniteCache<BinaryObject, BinaryObject> personCache = ignite.getOrCreateCache(personCacheConfig).withKeepBinary();
+    IgniteCache<Long, BinaryObject> cityCache = ignite.cache(CITY_CACHE_NAME).withKeepBinary();
+    IgniteCache<BinaryObject, BinaryObject> personCache = ignite.cache(PERSON_CACHE_NAME).withKeepBinary();
 
     System.out.println("> Ignite cache names: " + ignite.cacheNames());
 
-    // 1 - SQL API usage to interact with the cache
-    // --------------------------------------------
-
+    // 1 - SQL API:
+    // ------------
     SqlFieldsQuery insertCity = new SqlFieldsQuery(
         "INSERT INTO City (_key, id, name) VALUES (?, ?, ?)");
     cityCache.query(insertCity.setArgs(1L, 1L, "Forest Hill")).getAll();
@@ -61,11 +47,11 @@ public class IgniteBinaryCacheConfig {
     cityCache.query(insertCity.setArgs(3L, 3L, "St. Petersburg")).getAll();
 
     SqlFieldsQuery insertPerson = new SqlFieldsQuery(
-        "INSERT INTO Person (id, city_id, name) VALUES (?, ?, ?)");
-    personCache.query(insertPerson.setArgs(1L, 3L, "John Doe")).getAll();
-    personCache.query(insertPerson.setArgs(2L, 2L, "Jane Roe")).getAll();
-    personCache.query(insertPerson.setArgs(3L, 1L, "Mary Major")).getAll();
-    personCache.query(insertPerson.setArgs(4L, 2L, "Richard Miles")).getAll();
+        "INSERT INTO Person (id, name, city_id) VALUES (?, ?, ?)");
+    personCache.query(insertPerson.setArgs(1L, "John Doe", 3L)).getAll();
+    personCache.query(insertPerson.setArgs(2L, "Jane Roe", 2L)).getAll();
+    personCache.query(insertPerson.setArgs(3L, "Mary Major", 1L)).getAll();
+    personCache.query(insertPerson.setArgs(4L, "Richard Miles", 2L)).getAll();
 
     // 2 - Key-Value API usage to interact with the cache
     // --------------------------------------------------
@@ -81,14 +67,21 @@ public class IgniteBinaryCacheConfig {
 
     //    2.2 - using binary builder
 
+//    BinaryObject cityKey = binary.builder(CITY_KEY_TYPE)
+//        .setField("id", 5L)
+//        .build();
+
     BinaryObject cityVal = binary.builder(CITY_VALUE_TYPE)
         .setField("id", 5L)
         .setField("name", "Natalândia")
         .build();
+
+//    cityCache.put(cityKey, cityVal);
     cityCache.put(cityVal.field("id"), cityVal);
 
     BinaryObject personKey = binary.builder(PERSON_KEY_TYPE)
         .setField("id", 6L)
+//        .setField("city_id", cityKey.field("id"), long.class)
         .setField("city_id", 5L)
         .build();
 
