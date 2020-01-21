@@ -5,18 +5,18 @@ import org.apache.ignite.cache.query.annotations.QuerySqlField;
 public class Person {
 
   @QuerySqlField(index = true)
-  private String name;
+  private String NAME;
 
   public Person(String name) {
-    this.name = name;
+    this.NAME = name;
   }
 
   public String getName() {
-    return name;
+    return NAME;
   }
 
   public void setName(String name) {
-    this.name = name;
+    this.NAME = name;
   }
 
 }

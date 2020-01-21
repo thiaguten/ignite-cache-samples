@@ -6,31 +6,31 @@ import org.apache.ignite.cache.query.annotations.QuerySqlField;
 public class PersonPK {
 
   @QuerySqlField
-  private Long id;
+  private Long ID;
 
-  @QuerySqlField(name = "city_id")
+  @QuerySqlField
   @AffinityKeyMapped
-  private Long cityId;
+  private Long CITY_ID;
 
   public PersonPK(Long id, Long cityId) {
-    this.id = id;
-    this.cityId = cityId;
+    this.ID = id;
+    this.CITY_ID = cityId;
   }
 
   public Long getId() {
-    return id;
+    return ID;
   }
 
   public void setId(Long id) {
-    this.id = id;
+    this.ID = id;
   }
 
   public Long getCityId() {
-    return cityId;
+    return CITY_ID;
   }
 
   public void setCityId(Long cityId) {
-    this.cityId = cityId;
+    this.CITY_ID = cityId;
   }
 
 }

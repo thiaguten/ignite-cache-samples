@@ -5,30 +5,30 @@ import org.apache.ignite.cache.query.annotations.QuerySqlField;
 public class City {
 
   @QuerySqlField
-  private Long id;
+  private Long ID;
 
   @QuerySqlField(index = true)
-  private String name;
+  private String NAME;
 
   public City(Long id, String name) {
-    this.id = id;
-    this.name = name;
+    this.ID = id;
+    this.NAME = name;
   }
 
   public Long getId() {
-    return id;
+    return ID;
   }
 
   public void setId(Long id) {
-    this.id = id;
+    this.ID = id;
   }
 
   public String getName() {
-    return name;
+    return NAME;
   }
 
   public void setName(String name) {
-    this.name = name;
+    this.NAME = name;
   }
 
 }

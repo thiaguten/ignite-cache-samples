@@ -87,7 +87,7 @@ public class IgniteBinaryCacheConfig {
 
     BinaryObject personKey = binary.builder(PERSON_KEY_TYPE)
         .setField("id", 6L)
-        .setField("cityId", 5L)
+        .setField("city_id", 5L)
         .build();
 
     BinaryObject personVal = binary.builder(PERSON_VALUE_TYPE)
@@ -165,27 +165,27 @@ public class IgniteBinaryCacheConfig {
     System.out.println("> [Person] Key-Value query result:");
     BinaryObject person1Key = binary.builder(PERSON_KEY_TYPE)
         .setField("id", 1L)
-        .setField("cityId", 3L)
+        .setField("city_id", 3L)
         .build();
     BinaryObject person2Key = binary.builder(PERSON_KEY_TYPE)
         .setField("id", 2L)
-        .setField("cityId", 2L)
+        .setField("city_id", 2L)
         .build();
     BinaryObject person3Key = binary.builder(PERSON_KEY_TYPE)
         .setField("id", 3L)
-        .setField("cityId", 1L)
+        .setField("city_id", 1L)
         .build();
     BinaryObject person4Key = binary.builder(PERSON_KEY_TYPE)
         .setField("id", 4L)
-        .setField("cityId", 2L)
+        .setField("city_id", 2L)
         .build();
     BinaryObject person5Key = binary.builder(PERSON_KEY_TYPE)
         .setField("id", 5L)
-        .setField("cityId", 4L)
+        .setField("city_id", 4L)
         .build();
     BinaryObject person6Key = binary.builder(PERSON_KEY_TYPE)
         .setField("id", 6L)
-        .setField("cityId", 5L)
+        .setField("city_id", 5L)
         .build();
 
     Set<BinaryObject> keys = new HashSet<>(
@@ -198,7 +198,7 @@ public class IgniteBinaryCacheConfig {
 //    TreeMap<BinaryObject, BinaryObject> sortedMap = new TreeMap<>(Comparator.comparing(binary -> binary.field("id")));
 //    sortedMap.putAll(map);
 //    sortedMap.forEach((k,v) ->
-//        System.out.println("\t" + k.field("id") + ", " + k.field("cityId") + ", " + v.field("name")));
+//        System.out.println("\t" + k.field("id") + ", " + k.field("city_id") + ", " + v.field("name")));
 
 //    map.entrySet()
 //        .stream()
@@ -206,7 +206,7 @@ public class IgniteBinaryCacheConfig {
 //        .map(entry -> {
 //          BinaryObject key = entry.getKey();
 //          BinaryObject value = entry.getValue();
-//          return "\t" + key.field("id") + ", " + key.field("cityId") + ", " + value.field("name");
+//          return "\t" + key.field("id") + ", " + key.field("city_id") + ", " + value.field("name");
 //        })
 //        .forEach(System.out::println);
 
@@ -216,7 +216,7 @@ public class IgniteBinaryCacheConfig {
         .map(entry -> {
           BinaryObject key = entry.getKey();
           BinaryObject value = entry.getValue();
-          return "\t" + key.field("id") + ", " + key.field("cityId") + ", " + value.field("name");
+          return "\t" + key.field("id") + ", " + key.field("city_id") + ", " + value.field("name");
         })
         .forEach(System.out::println);
   }
