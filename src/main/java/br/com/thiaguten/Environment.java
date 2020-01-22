@@ -254,7 +254,7 @@ public class Environment {
 
     Collection<CacheEntry<BinaryObject, BinaryObject>> entries = personCache.getEntries(keys);
     entries.stream()
-        .sorted(Comparator.comparing(cacheEntry -> cacheEntry.getKey().field("id")))
+        .sorted(Comparator.comparing(cacheEntry -> (long) cacheEntry.getKey().field("id")))
         .map(entry -> {
           BinaryObject key = entry.getKey();
           BinaryObject value = entry.getValue();
