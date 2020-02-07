@@ -4,15 +4,17 @@ import static br.com.thiaguten.Environment.CITY_CACHE_NAME;
 import static br.com.thiaguten.Environment.PERSON_CACHE_NAME;
 import static br.com.thiaguten.Environment.SCHEMA;
 
-import br.com.thiaguten.model.City;
-import br.com.thiaguten.model.Person;
-import br.com.thiaguten.model.PersonPK;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteBinary;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.binary.BinaryObject;
+import org.apache.ignite.cache.CacheMode;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
+
+import br.com.thiaguten.model.City;
+import br.com.thiaguten.model.Person;
+import br.com.thiaguten.model.PersonPK;
 
 public class IgniteCacheMyPreferredWay2 {
 
@@ -25,41 +27,51 @@ public class IgniteCacheMyPreferredWay2 {
         Ignite ignite = Environment.newIgnite();
         IgniteBinary binary = ignite.binary();
 
+        // Crete Cache configuration template(s) with custom schema
+        CacheConfiguration<?, ?> cacheCfgReplicated = new CacheConfiguration<>("templateCacheReplicado")
+                .setCacheMode(CacheMode.REPLICATED)
+                .setSqlSchema(SCHEMA);
+
+        CacheConfiguration<?, ?> cacheCfgPartitioned = new CacheConfiguration<>("templateCacheParticionado")
+                .setCacheMode(CacheMode.PARTITIONED)
+                .setSqlSchema(SCHEMA);
+
+        // Register the cache configuration template in the Ignite instance to make it available globally in the cluster
+        ignite.addCacheConfiguration(cacheCfgReplicated);
+        ignite.addCacheConfiguration(cacheCfgPartitioned);
+
         // Create dummy cache to act as an entry point for SQL queries (new SQL API which do not require this
         // will appear in future versions, JDBC and ODBC drivers do not require it already).
         // https://apacheignite-sql.readme.io/docs/schema-and-indexes
-        CacheConfiguration<?, ?> cacheCfg = new CacheConfiguration<>("temp").setSqlSchema("PUBLIC");
+        CacheConfiguration<?, ?> cacheCfg = new CacheConfiguration<>("DUMMY").setSqlSchema(SCHEMA);
         IgniteCache<?, ?> dummyCache = ignite.getOrCreateCache(cacheCfg);
 
         dummyCache.query(new SqlFieldsQuery(
                 "CREATE TABLE IF NOT EXISTS City (id LONG PRIMARY KEY, name VARCHAR) " +
-                        " WITH \"TEMPLATE=replicated, " +
+                        " WITH \"TEMPLATE=" + cacheCfgReplicated.getName() + ", " +
                         " CACHE_NAME=" + CITY_CACHE_NAME + ", " +
                         " KEY_TYPE=" + CITY_KEY_TYPE + ", " +
-                        " VALUE_TYPE=" + CITY_VALUE_TYPE + "\"")
-                .setSchema(SCHEMA))
-                .getAll();
+                        " VALUE_TYPE=" + CITY_VALUE_TYPE + "\"")).getAll();
 
         dummyCache.query(new SqlFieldsQuery(
                 "CREATE TABLE IF NOT EXISTS Person (id LONG, name VARCHAR, city_id LONG, PRIMARY KEY (id, city_id)) " +
-                        " WITH \"TEMPLATE=partitioned, " +
+                        " WITH \"TEMPLATE=" + cacheCfgPartitioned.getName() + ", " +
                         " BACKUPS=1, " +
                         " AFFINITY_KEY=city_id, " +
                         " CACHE_NAME=" + PERSON_CACHE_NAME + ", " +
                         " KEY_TYPE=" + PERSON_KEY_TYPE + ", " +
-                        " VALUE_TYPE=" + PERSON_VALUE_TYPE + "\"")
-                .setSchema(SCHEMA))
-                .getAll();
+                        " VALUE_TYPE=" + PERSON_VALUE_TYPE + "\"")).getAll();
 
-        dummyCache.query(new SqlFieldsQuery("CREATE INDEX idx_city_name ON City (name)").setSchema(SCHEMA)).getAll();
-        dummyCache.query(new SqlFieldsQuery("CREATE INDEX idx_person_name ON Person (name)").setSchema(SCHEMA)).getAll();
+        dummyCache.query(new SqlFieldsQuery("CREATE INDEX idx_city_name ON City (name)")).getAll();
+        dummyCache.query(new SqlFieldsQuery("CREATE INDEX idx_person_name ON Person (name)")).getAll();
 
-        IgniteCache<BinaryObject, BinaryObject> cityCache = ignite.cache(CITY_CACHE_NAME).withKeepBinary();
-        IgniteCache<BinaryObject, BinaryObject> personCache = ignite.cache(PERSON_CACHE_NAME).withKeepBinary();
-
+        // Destroy dummy cache because it's not necessary anymore
         dummyCache.destroy();
 
         System.out.println("> Ignite cache names: " + ignite.cacheNames());
+
+        IgniteCache<BinaryObject, BinaryObject> cityCache = ignite.cache(CITY_CACHE_NAME).withKeepBinary();
+        IgniteCache<BinaryObject, BinaryObject> personCache = ignite.cache(PERSON_CACHE_NAME).withKeepBinary();
 
         // 1 - SQL API usage to interact with the cache
         // --------------------------------------------
